@@ -1,0 +1,80 @@
+{% extends 'inventory/base.html' %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <a href="{% url 'products_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h5 class="fw-bold mb-0">{{ title }}</h5>
+                <small class="text-muted">Fill in the product details below</small>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Product Name <span class="text-danger">*</span></label>
+                            {{ form.product_name }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                            {{ form.category }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Supplier</label>
+                            {{ form.supplier }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Unit Price (₹) <span class="text-danger">*</span></label>
+                            {{ form.unit_price }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Current Stock Quantity <span class="text-danger">*</span></label>
+                            {{ form.stock_quantity }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Reorder Level <span class="text-danger">*</span></label>
+                            {{ form.reorder_level }}
+                            <small class="text-muted">Alert when stock falls below this</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Reorder Quantity <span class="text-danger">*</span></label>
+                            {{ form.reorder_quantity }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Delivery Lead Time (Days)</label>
+                            {{ form.delivery_time_days }}
+                            <small class="text-muted">Used in ML demand forecasting</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Delivery Status</label>
+                            {{ form.delivery_status }}
+                        </div>
+                    </div>
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger mt-3 py-2">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Please correct the errors below.
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4 d-flex justify-content-end gap-2">
+                        <a href="{% url 'products_list' %}" class="btn btn-outline-secondary px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                            <i class="bi bi-save me-1"></i> Save Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

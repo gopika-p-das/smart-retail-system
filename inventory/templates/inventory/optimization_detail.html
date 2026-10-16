@@ -1,0 +1,188 @@
+{% extends 'inventory/base.html' %}
+{% block page_title %}Optimization Detail{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+    <a href="{% url 'inventory_optimization' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="fw-bold mb-0">{{ product.product_name }} — Optimization Detail</h5>
+        <small class="text-muted">{{ product.category }} | Supplier: {{ product.supplier.supplier_name|default:"N/A" }}</small>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- LEFT: Product & ML Details -->
+    <div class="col-lg-5">
+        <!-- Product Info -->
+        <div class="content-card mb-3">
+            <div class="card-header"><i class="bi bi-box-seam me-2"></i>Product Information</div>
+            <div class="card-body p-0">
+                <table class="table table-borderless mb-0" style="font-size:0.88rem;">
+                    <tr class="border-bottom">
+                        <td class="text-muted ps-4">Product Name</td>
+                        <td class="fw-semibold">{{ product.product_name }}</td>
+                    </tr>
+                    <tr class="border-bottom">
+                        <td class="text-muted ps-4">Category</td>
+                        <td><span class="badge bg-light text-dark border">{{ product.category }}</span></td>
+                    </tr>
+                    <tr class="border-bottom">
+                        <td class="text-muted ps-4">Unit Price</td>
+                        <td class="fw-semibold">₹{{ product.unit_price }}</td>
+                    </tr>
+                    <tr class="border-bottom">
+                        <td class="text-muted ps-4">Current Stock</td>
+                        <td>
+                            <strong class="{% if product.stock_status == 'Critical' %}text-danger{% elif product.stock_status == 'Low Stock' %}text-warning{% else %}text-success{% endif %} fs-5">
+                                {{ opt.current_stock }} units
+                            </strong>
+                        </td>
+                    </tr>
+                    <tr class="border-bottom">
+                        <td class="text-muted ps-4">Reorder Level</td>
+                        <td class="fw-semibold">{{ product.reorder_level }} units</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted ps-4">Reorder Quantity</td>
+                        <td class="fw-semibold">{{ product.reorder_quantity }} units</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ML Model Results -->
+        <div class="content-card">
+            <div class="card-header"><i class="bi bi-cpu me-2 text-primary"></i>ML Model Predictions</div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center p-3 mb-2" style="background:#eff6ff;border-radius:10px;">
+                    <div>
+                        <div style="font-size:0.75rem;font-weight:700;color:#4f8ef7;text-transform:uppercase;">Linear Regression</div>
+                        <div style="font-size:0.75rem;color:#8892a4;">Selected Model ✓</div>
+                    </div>
+                    <div style="font-size:2rem;font-weight:800;color:#4f8ef7;">{{ opt.lr_prediction }}</div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center p-3" style="background:#f0fdf4;border-radius:10px;">
+                    <div>
+                        <div style="font-size:0.75rem;font-weight:700;color:#10b981;text-transform:uppercase;">Random Forest</div>
+                        <div style="font-size:0.75rem;color:#8892a4;">Comparison Model</div>
+                    </div>
+                    <div style="font-size:2rem;font-weight:800;color:#10b981;">{{ opt.rf_prediction }}</div>
+                </div>
+                <div class="text-center mt-3">
+                    <small class="text-muted">Final Predicted Demand (Linear Regression)</small>
+                    <div style="font-size:2.5rem;font-weight:800;color:#1a1f2e;">{{ opt.predicted_demand }}</div>
+                    <small class="text-muted">units</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Visual Comparison & Decision -->
+    <div class="col-lg-7">
+        <!-- Visual Bar Comparison -->
+        <div class="content-card mb-3">
+            <div class="card-header">
+                <i class="bi bi-bar-chart-line me-2 text-warning"></i>Stock vs Demand Visualization
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-semibold" style="font-size:0.85rem;">Current Stock</span>
+                        <span class="fw-bold text-success">{{ opt.current_stock }} units</span>
+                    </div>
+                    <div class="progress mb-1" style="height:28px;border-radius:8px;background:#f0f2f5;">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             style="width:{{ stock_bar }}%;font-size:0.8rem;font-weight:600;border-radius:8px;">
+                            {% if stock_bar > 10 %}{{ opt.current_stock }}{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-semibold" style="font-size:0.85rem;">Predicted Demand (ML)</span>
+                        <span class="fw-bold text-primary">{{ opt.predicted_demand }} units</span>
+                    </div>
+                    <div class="progress mb-1" style="height:28px;border-radius:8px;background:#f0f2f5;">
+                        <div class="progress-bar bg-primary" role="progressbar"
+                             style="width:{{ demand_bar }}%;font-size:0.8rem;font-weight:600;border-radius:8px;">
+                            {% if demand_bar > 10 %}{{ opt.predicted_demand }}{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border-top:1px dashed #e2e8f0;padding-top:16px;">
+                    <div class="d-flex justify-content-between" style="font-size:0.88rem;">
+                        <span class="text-muted">Stock Difference</span>
+                        <span class="fw-bold {% if opt.stock_difference > 0 %}text-danger{% else %}text-success{% endif %}">
+                            {% if opt.stock_difference > 0 %}Shortage of {{ opt.stock_difference }} units{% else %}Surplus of {{ opt.stock_difference|slice:"1:" }} units{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Final Decision -->
+        <div class="content-card">
+            <div class="card-header"><i class="bi bi-clipboard-check me-2"></i>Inventory Decision</div>
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <small class="text-muted d-block mb-2">RECOMMENDATION</small>
+                    {% if opt.recommendation == 'REORDER' %}
+                        <span class="badge-reorder" style="font-size:1.1rem;padding:10px 24px;">
+                            <i class="bi bi-arrow-repeat me-2"></i>REORDER
+                        </span>
+                        <p class="text-muted mt-3 mb-0" style="font-size:0.85rem;">
+                            Predicted demand exceeds current stock. Order <strong>{{ opt.recommended_quantity }} units</strong> immediately to avoid stockout.
+                        </p>
+                    {% elif opt.recommendation == 'REDUCE' %}
+                        <span class="badge-reduce" style="font-size:1.1rem;padding:10px 24px;">
+                            <i class="bi bi-arrow-down-circle me-2"></i>REDUCE
+                        </span>
+                        <p class="text-muted mt-3 mb-0" style="font-size:0.85rem;">
+                            Current stock is significantly higher than predicted demand (>1.5x). Reduce next procurement quantity.
+                        </p>
+                    {% else %}
+                        <span class="badge-maintain" style="font-size:1.1rem;padding:10px 24px;">
+                            <i class="bi bi-check-circle me-2"></i>MAINTAIN
+                        </span>
+                        <p class="text-muted mt-3 mb-0" style="font-size:0.85rem;">
+                            Current stock is balanced with predicted demand. No immediate action required.
+                        </p>
+                    {% endif %}
+                </div>
+
+                <div class="row g-2 mt-2" style="font-size:0.82rem;">
+                    <div class="col-6">
+                        <div style="background:#f8f9fc;border-radius:8px;padding:10px;">
+                            <div class="text-muted">Business Logic Rule</div>
+                            <div class="fw-semibold">
+                                {% if opt.recommendation == 'REORDER' %}Demand > Stock{% elif opt.recommendation == 'REDUCE' %}Stock > Demand × 1.5{% else %}Stock ≈ Demand{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div style="background:#f8f9fc;border-radius:8px;padding:10px;">
+                            <div class="text-muted">Recommended Qty</div>
+                            <div class="fw-semibold">
+                                {% if opt.recommended_quantity > 0 %}{{ opt.recommended_quantity }} units{% else %}No order needed{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3 d-flex gap-2">
+                    <a href="{% url 'demand_prediction' %}?product_id={{ product.id }}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-cpu me-1"></i>Re-Predict
+                    </a>
+                    <a href="{% url 'product_edit' product.id %}" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="bi bi-pencil me-1"></i>Edit Product
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

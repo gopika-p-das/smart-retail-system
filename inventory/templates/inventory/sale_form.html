@@ -1,0 +1,63 @@
+{% extends 'inventory/base.html' %}
+{% block page_title %}Record New Sale{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <a href="{% url 'sales_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h5 class="fw-bold mb-0">Record New Sale</h5>
+                <small class="text-muted">Stock will auto-update after sale is recorded</small>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="alert alert-info py-2 mb-3" style="font-size:0.85rem;border-radius:10px;">
+            <i class="bi bi-info-circle me-1"></i>
+            When a sale is saved, <strong>inventory stock automatically decreases</strong> by units sold.
+        </div>
+
+        <div class="content-card">
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Product <span class="text-danger">*</span></label>
+                            {{ form.product }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Sale Date <span class="text-danger">*</span></label>
+                            {{ form.sale_date }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Units Sold <span class="text-danger">*</span></label>
+                            {{ form.units_sold }}
+                        </div>
+                    </div>
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger mt-3 py-2" style="font-size:0.85rem;">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        {% for field in form %}
+                            {% for error in field.errors %}{{ error }}{% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4 d-flex justify-content-end gap-2">
+                        <a href="{% url 'sales_list' %}" class="btn btn-outline-secondary px-4">Cancel</a>
+                        <button type="submit" class="btn btn-success px-4 fw-semibold">
+                            <i class="bi bi-save me-1"></i> Save Sale
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

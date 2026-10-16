@@ -1,0 +1,195 @@
+{% extends 'inventory/base.html' %}
+{% block page_title %}Reports{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h5 class="fw-bold mb-1">Reports & Analytics</h5>
+    <small class="text-muted">Sales, Inventory, Low Stock, and ML Prediction Reports</small>
+</div>
+
+<!-- REPORT TYPE SELECTOR -->
+<div class="content-card mb-4">
+    <div class="card-body p-3">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="?type=sales" class="btn {% if report_type == 'sales' %}btn-primary{% else %}btn-outline-secondary{% endif %} btn-sm px-3">
+                <i class="bi bi-receipt me-1"></i>Sales Report
+            </a>
+            <a href="?type=inventory" class="btn {% if report_type == 'inventory' %}btn-primary{% else %}btn-outline-secondary{% endif %} btn-sm px-3">
+                <i class="bi bi-box-seam me-1"></i>Inventory Report
+            </a>
+            <a href="?type=lowstock" class="btn {% if report_type == 'lowstock' %}btn-danger{% else %}btn-outline-secondary{% endif %} btn-sm px-3">
+                <i class="bi bi-exclamation-triangle me-1"></i>Low Stock Report
+            </a>
+            <a href="?type=prediction" class="btn {% if report_type == 'prediction' %}btn-primary{% else %}btn-outline-secondary{% endif %} btn-sm px-3">
+                <i class="bi bi-cpu me-1"></i>Demand Prediction Report
+            </a>
+            <a href="?type=optimization" class="btn {% if report_type == 'optimization' %}btn-primary{% else %}btn-outline-secondary{% endif %} btn-sm px-3">
+                <i class="bi bi-graph-up-arrow me-1"></i>Optimization Report
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- SALES REPORT -->
+{% if report_type == 'sales' %}
+<div class="content-card">
+    <div class="card-header d-flex justify-content-between">
+        <span><i class="bi bi-receipt me-2 text-success"></i>Sales Report</span>
+        <span class="badge bg-light text-dark border">{{ sales|length }} records</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr><th>Sale ID</th><th>Product</th><th>Category</th><th>Date</th><th>Units Sold</th><th>Sales Value</th></tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td>#{{ sale.id }}</td>
+                        <td class="fw-semibold">{{ sale.product.product_name }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ sale.product.category }}</span></td>
+                        <td>{{ sale.sale_date }}</td>
+                        <td>{{ sale.units_sold }}</td>
+                        <td class="text-success fw-semibold">₹{{ sale.sales_value }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-4 text-muted">No sales data available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- INVENTORY REPORT -->
+{% elif report_type == 'inventory' %}
+<div class="content-card">
+    <div class="card-header"><i class="bi bi-box-seam me-2 text-primary"></i>Inventory Report</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr><th>Product</th><th>Category</th><th>Unit Price</th><th>Current Stock</th><th>Reorder Level</th><th>Stock Value</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr>
+                        <td class="fw-semibold">{{ p.product_name }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ p.category }}</span></td>
+                        <td>₹{{ p.unit_price }}</td>
+                        <td class="fw-bold {% if p.stock_status == 'Critical' %}text-danger{% elif p.stock_status == 'Low Stock' %}text-warning{% else %}text-success{% endif %}">{{ p.stock_quantity }}</td>
+                        <td>{{ p.reorder_level }}</td>
+                        <td>₹{{ p.stock_value }}</td>
+                        <td>
+                            {% if p.stock_status == 'Critical' %}<span class="badge-critical">Critical</span>
+                            {% elif p.stock_status == 'Low Stock' %}<span class="badge-low">Low Stock</span>
+                            {% else %}<span class="badge-normal">Normal</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">No inventory data.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- LOW STOCK REPORT -->
+{% elif report_type == 'lowstock' %}
+<div class="content-card">
+    <div class="card-header"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Low Stock Alert Report</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr><th>Product</th><th>Category</th><th>Current Stock</th><th>Reorder Level</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    {% for p in low_stock %}
+                    <tr class="table-warning">
+                        <td class="fw-semibold">{{ p.product_name }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ p.category }}</span></td>
+                        <td class="text-danger fw-bold">{{ p.stock_quantity }}</td>
+                        <td>{{ p.reorder_level }}</td>
+                        <td>
+                            {% if p.stock_quantity == 0 %}<span class="badge-critical">Critical</span>
+                            {% else %}<span class="badge-low">Low Stock</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center py-4 text-success"><i class="bi bi-check-circle me-1"></i>All products have healthy stock!</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- DEMAND PREDICTION REPORT -->
+{% elif report_type == 'prediction' %}
+<div class="content-card">
+    <div class="card-header"><i class="bi bi-cpu me-2 text-primary"></i>ML Demand Prediction Report</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr><th>Product</th><th>Category</th><th>Current Stock</th><th>LR Prediction</th><th>RF Prediction</th><th>Selected Model</th><th>Final Demand</th></tr>
+                </thead>
+                <tbody>
+                    {% for item in predictions %}
+                    <tr>
+                        <td class="fw-semibold">{{ item.product_name }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ item.category }}</span></td>
+                        <td>{{ item.current_stock }}</td>
+                        <td>{{ item.lr_pred }}</td>
+                        <td>{{ item.rf_pred }}</td>
+                        <td><span class="badge bg-info text-dark">{{ item.selected_model }}</span></td>
+                        <td class="fw-bold text-primary">{{ item.final_demand }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">No prediction data available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- OPTIMIZATION REPORT -->
+{% elif report_type == 'optimization' %}
+<div class="content-card">
+    <div class="card-header"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Inventory Optimization Report</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr><th>Product</th><th>Predicted Demand</th><th>Safety Stock</th><th>Recommended Reorder Qty</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    {% for opt in optimizations %}
+                    <tr>
+                        <td class="fw-semibold">{{ opt.product_name }}</td>
+                        <td>{{ opt.predicted_demand }}</td>
+                        <td>{{ opt.safety_stock }}</td>
+                        <td class="fw-bold text-success">{{ opt.recommended_order }}</td>
+                        <td>
+                            {% if opt.recommended_order > 0 %}
+                            <span class="badge bg-warning text-dark">Order Now</span>
+                            {% else %}
+                            <span class="badge bg-success">Adequate Stock</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center py-4 text-muted">No optimization data available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

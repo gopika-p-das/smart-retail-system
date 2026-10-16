@@ -1,0 +1,82 @@
+{% extends 'inventory/base.html' %}
+{% block page_title %}Customers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h5 class="fw-bold mb-1">Customer Management</h5>
+        <small class="text-muted">View and manage customer details</small>
+    </div>
+    <a href="{% url 'customer_add' %}" class="btn btn-primary btn-sm fw-semibold px-3">
+        <i class="bi bi-plus-circle me-1"></i> Add Customer
+    </a>
+</div>
+
+<!-- SEARCH -->
+<div class="content-card mb-4">
+    <div class="card-body p-3">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search customer name...">
+                </div>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+                <a href="{% url 'customers_list' %}" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- CUSTOMERS TABLE -->
+<div class="content-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-people me-2 text-primary"></i>Customer List</span>
+        <span class="badge bg-light text-dark border">{{ customers|length }} customers</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Customer Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Total Purchases</th>
+                        <th>Joined</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td class="text-muted">{{ customer.id }}</td>
+                        <td class="fw-semibold">{{ customer.customer_name }}</td>
+                        <td>{{ customer.phone }}</td>
+                        <td>{{ customer.email|default:"—" }}</td>
+                        <td class="text-success fw-semibold">₹{{ customer.total_purchases }}</td>
+                        <td>{{ customer.created_at|date:"d M Y" }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'customer_delete' customer.id %}" class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Delete {{ customer.customer_name }}?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-people fs-2 d-block mb-2"></i>
+                            No customers added yet. <a href="{% url 'customer_add' %}">Add first customer</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
